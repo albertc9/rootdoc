@@ -23,6 +23,16 @@ void task1_3(){
     file -> Close();
     delete file;
 
+    // 将直方图数据导出为CSV文件以供Origin使用
+    std::ofstream outFileCSV("task1_3_output.csv");
+    outFileCSV << "Bin,Value,Error\n";
+    for (int i = 1; i <= h1->GetNbinsX(); ++i) {
+        outFileCSV << h1->GetBinCenter(i) << ","
+                   << h1->GetBinContent(i) << ","
+                   << h1->GetBinError(i) << "\n";
+    }
+    outFileCSV.close();
+
 
     // 调试完, 接下来通过 output1_3.root 生成输出的图片
     TFile *inFile = TFile::Open("output1_3.root");
