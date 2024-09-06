@@ -18,7 +18,6 @@ void task1_3(){
 
     TH1D *h1a = r_strip -> ProjectionY("TemTitle1", 1, 5);
     TH1D *h1b = r_strip -> ProjectionY("TemTitle2", 1, 5);
-    TH1D *h1c = r_strip -> ProjectionY("TemTitle3", 1, 5);
 
     h1a -> Fit("gaus", "q");
     TF1 *fitResult = h1a -> GetFunction("gaus");
@@ -28,21 +27,13 @@ void task1_3(){
     TF1 *fitResultLandau = h1b -> GetFunction("landau");
     fitResultLandau -> SetLineColor(kRed);
 
-    TF1 *fitResultVavilov = new TF1("vavilov", "[0]*TMath::Gaus(x, [1], [2]) + [3]*TMath::Landau(x, [4], [5])", 0, 200); 
-    fitResultVavilov -> SetParameters(1, 20, 5, 1, 10, 2);  // 初始参数
-    h1c -> Fit("vavilov", "R"); // Vavilov分布拟合
-    h1c -> GetFunction("vavilov");
-    fitResultVavilov -> SetLineColor(kBlue);
-
 
     // 创建 root 文件, 后续再输出图像文件
     TFile *outFile = new TFile("output1_3.root", "RECREATE"); 
     h1a -> Write();
     h1b -> Write();
-    h1c -> Write();
     fitResult -> Write("gauseFit");
     fitResultLandau -> Write("landauFit");
-    fitResultVavilov -> Write("vavilovFit");
     outFile -> Close();
     file -> Close();
 
@@ -53,30 +44,26 @@ void task1_3(){
     TH1D *h2 = (TH1D*)inFile -> Get("TemTitle1");
     TF1 *fitResult2 = (TF1*)inFile -> Get("gauseFit");
     TF1 *fitResultLandau2 = (TF1*)inFile -> Get("landauFit");
-    TF1 *fitResultVavilov2 = (TF1*)inFile -> Get("vavilovFit");
 
     TColor *colorGray = new TColor(2000, 145/255.0, 146/255.0, 171/255.0);
     TColor *colorBlue = new TColor(2001, 99/255.0, 178/255.0, 238/255.0);
     TColor *colorRed = new TColor(2002, 248/255.0, 149/255.0, 136/255.0);
-    TColor *colorGreen = new TColor(2003, 118/255.0, 218/255.0, 145/255.0);
     h2 -> SetLineColor(2000);
     fitResult2 -> SetLineColor(2001);
     fitResultLandau2 -> SetLineColor(2002);
-    fitResultVavilov2 -> SetLineColor(2003);
     
+
     TCanvas *c1 = new TCanvas("c1", "Histogram", 800, 600);
     h2 -> GetXaxis() -> SetLabelSize(0.04);
     h2 -> GetYaxis() -> SetLabelSize(0.04);
     h2 -> Draw();
     fitResult2 -> Draw("same");
     fitResultLandau2 -> Draw("same");
-    fitResultVavilov2 -> Draw("same");
 
     TLegend *legend = new TLegend(0.67, 0.5, 0.92, 0.63);
     legend -> AddEntry(h2, "Origin Data", "l");
     legend -> AddEntry(fitResult2, "Gaussian Fit", "l");
     legend -> AddEntry(fitResultLandau2, "Landau Fit", "l");
-    legend -> AddEntry(fitResultVavilov2, "Vavilov Fit", "l");
     legend -> SetTextSize(0.03);
     legend -> Draw();
 
