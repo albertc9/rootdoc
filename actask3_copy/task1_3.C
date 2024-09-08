@@ -16,36 +16,23 @@ void task1_3(){
     c0 -> SaveAs("r_strip output.png");
     delete c0;
 
-    TH1D *h1a = r_strip -> ProjectionY("TemTitle1", 1, 5);
-    TH1D *h1b = r_strip -> ProjectionY("TemTitle2", 1, 5);
-    TH1D *h1c = r_strip -> ProjectionY("TemTitle3", 1, 5);
+    TH1D *h1a = r_strip -> ProjectionY("TemTitle1", 1, 50);
+    TH1D *h1b = r_strip -> ProjectionY("TemTitle2", 1, 50);
+    TH1D *h1c = r_strip -> ProjectionY("TemTitle3", 1, 50);
 
-    /*
-    * 调用h1a -> Fit("vavilov", "R");之后，ROOT会创建一个新的TF1对象并附加到h1a中。因此，需要使用h1a -> GetFunction("vavilov")来获取这个新的拟合对象。
-	* 修改后的代码首先执行拟合操作，然后通过GetFunction()获取实际的拟合对象，再对这个对象设置参数名和其他属性。
-    */
-
-    TF1 *fitResultVavilov = new TF1("vavilov", "[0]*TMath::Gaus(x, [1], [2]) + [3]*TMath::Landau(x, [4], [5])", 0, 200); 
-    fitResultVavilov -> SetParameters(1, 20, 5, 1, 10, 2);  // 初始参数
-    h1a -> Fit("vavilov", "R"); // Vavilov分布拟合
-
-    // 获取实际的拟合函数对象
-    TF1 *fitResultVavilovFitted = h1a -> GetFunction("vavilov");
-    fitResultVavilovFitted -> SetParName(0, "Gauss_Amplitude");
-    fitResultVavilovFitted -> SetParName(1, "Gauss_Mean");
-    fitResultVavilovFitted -> SetParName(2, "Gauss_Sigma");
-    fitResultVavilovFitted -> SetParName(3, "Landau_Amplitude");
-    fitResultVavilovFitted -> SetParName(4, "Landau_Mean");
-    fitResultVavilovFitted -> SetParName(5, "Landau_Sigma");
-    fitResultVavilovFitted -> SetLineColor(kBlue);
+    h1a -> Fit("gaus", "q");
+    TF1 *fitResult = h1a -> GetFunction("gaus");
+    fitResult -> SetLineColor(kGreen);
 
     h1b -> Fit("landau");
     TF1 *fitResultLandau = h1b -> GetFunction("landau");
     fitResultLandau -> SetLineColor(kRed);
 
-    h1c -> Fit("gaus", "q");
-    TF1 *fitResult = h1c -> GetFunction("gaus");
-    fitResult -> SetLineColor(kGreen);
+    TF1 *fitResultVavilov = new TF1("vavilov", "[0]*TMath::Gaus(x, [1], [2]) + [3]*TMath::Landau(x, [4], [5])", 0, 200); 
+    fitResultVavilov -> SetParameters(1, 20, 5, 1, 10, 2);  // 初始参数
+    h1c -> Fit("vavilov", "R"); // Vavilov分布拟合
+    h1c -> GetFunction("vavilov");
+    fitResultVavilov -> SetLineColor(kBlue);
 
 
     // 创建 root 文件, 后续再输出图像文件
@@ -94,7 +81,7 @@ void task1_3(){
     legend -> Draw();
 
     gStyle-> SetOptStat("eMRSK");
-    gStyle-> SetOptFit();
+    gStyle-> SetOptFit(0111);
     h2 -> SetStats(1);
 
     TPaveStats *stats = (TPaveStats*)h2 -> FindObject("stats");
@@ -114,31 +101,8 @@ void task1_3(){
     c1 -> SaveAs("task1_3_output.png");
     c1 -> SaveAs("task1_3_output.pdf");
 
-
+    delete c1;
     inFile -> Close();
     delete inFile;
-
-    // 创建并打开txt文件，准备写入统计值
-    ofstream outfile("fit_statistics.txt");
-
-    if(outfile.is_open()) {
-        outfile << "Gaussian Fit Results:\n";
-        outfile << "Amplitude: " << fitResult2->GetParameter(0) << " ± " << fitResult2->GetParError(0) << "\n";
-        outfile << "Mean: " << fitResult2->GetParameter(1) << " ± " << fitResult2->GetParError(1) << "\n";
-        outfile << "Sigma: " << fitResult2->GetParameter(2) << " ± " << fitResult2->GetParError(2) << "\n";
-        outfile << "Chi-square: " << fitResult2->GetChisquare() << "\n";
-        outfile << "NDF: " << fitResult2->GetNDF() << "\n\n";
-
-        outfile << "Landau Fit Results:\n";
-        outfile << "Amplitude: " << fitResultLandau2->GetParameter(0) << " ± " << fitResultLandau2->GetParError(0) << "\n";
-        outfile << "MPV: " << fitResultLandau2->GetParameter(1) << " ± " << fitResultLandau2->GetParError(1) << "\n";
-        outfile << "Sigma: " << fitResultLandau2->GetParameter(2) << " ± " << fitResultLandau2->GetParError(2) << "\n";
-        outfile << "Chi-square: " << fitResultLandau2->GetChisquare() << "\n";
-        outfile << "NDF: " << fitResultLandau2->GetNDF() << "\n";
-
-        outfile.close();
-    } else {
-        cout << "Error opening file!" << endl;
-    }
 
 }

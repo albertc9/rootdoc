@@ -1,0 +1,13 @@
+Gaussian Fit Results:
+Amplitude: 4411.59 ± 18.5964
+Mean: 60.5593 ± 0.0410882
+Sigma: 10.6075 ± 0.0322276
+Chi-square: 21055.5
+NDF: 187
+
+Landau Fit Results:
+Amplitude: 27436.4 ± 117.785
+MPV: 54.9014 ± 0.0326169
+Sigma: 4.9042 ± 0.0166868
+Chi-square: 8819.68
+NDF: 187

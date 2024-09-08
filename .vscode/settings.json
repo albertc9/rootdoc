@@ -5,6 +5,7 @@
         "task1_3.C": "cpp",
         "new": "cpp",
         "task1_32.C": "cpp",
-        "task1_3bk.C": "cpp"
+        "task1_3bk.C": "cpp",
+        "iosfwd": "cpp"
     }
 }
