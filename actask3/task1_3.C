@@ -120,8 +120,7 @@ void task1_3(){
 
     // 创建并打开txt文件，准备写入统计值
     ofstream outfile("fit_statistics.txt");
-
-    if(outfile.is_open()) {
+    
         outfile << "Gaussian Fit Results:\n";
         outfile << "Amplitude: " << fitResult2->GetParameter(0) << " ± " << fitResult2->GetParError(0) << "\n";
         outfile << "Mean: " << fitResult2->GetParameter(1) << " ± " << fitResult2->GetParError(1) << "\n";
@@ -137,8 +136,4 @@ void task1_3(){
         outfile << "NDF: " << fitResultLandau2->GetNDF() << "\n";
 
         outfile.close();
-    } else {
-        cout << "Error opening file!" << endl;
-    }
-
 }
