@@ -7,13 +7,13 @@ void task1_3(){
     TFile *file = TFile::Open("result.root"); // 打开 result.root
     TH2D *r_strip = (TH2D*)file ->Get("r_strip"); // 获取 r_strip
 
-    TCanvas *c0 = new TCanvas("c0", "r_strip output", 600, 800);
+    TCanvas *c0 = new TCanvas("c0", "r_strip_output", 600, 800);
     r_strip -> Draw();
 
     gStyle -> SetOptStat(1111);
     r_strip -> SetStats(1);
 
-    c0 -> SaveAs("r_strip output.png");
+    c0 -> SaveAs("r_strip_output.png");
     delete c0;
 
     TH1D *h1a = r_strip -> ProjectionY("TemTitle1", 1, 5);
