@@ -98,12 +98,10 @@ void task1_3(){
     h2 -> SetStats(1);
 
     TPaveStats *stats = (TPaveStats*)h2 -> FindObject("stats");
-    if (stats){
         stats -> SetX1NDC(0.65);
         stats -> SetY1NDC(0.65);
         stats -> SetX2NDC(0.9);
         stats -> SetY2NDC(0.9);
-    }
 
     TLatex *title = new TLatex();
     title -> SetTextAlign(22);
@@ -120,20 +118,20 @@ void task1_3(){
 
     // 创建并打开txt文件，准备写入统计值
     ofstream outfile("fit_statistics.txt");
-    
-        outfile << "Gaussian Fit Results:\n";
-        outfile << "Amplitude: " << fitResult2->GetParameter(0) << " ± " << fitResult2->GetParError(0) << "\n";
-        outfile << "Mean: " << fitResult2->GetParameter(1) << " ± " << fitResult2->GetParError(1) << "\n";
-        outfile << "Sigma: " << fitResult2->GetParameter(2) << " ± " << fitResult2->GetParError(2) << "\n";
-        outfile << "Chi-square: " << fitResult2->GetChisquare() << "\n";
-        outfile << "NDF: " << fitResult2->GetNDF() << "\n\n";
 
-        outfile << "Landau Fit Results:\n";
-        outfile << "Amplitude: " << fitResultLandau2->GetParameter(0) << " ± " << fitResultLandau2->GetParError(0) << "\n";
-        outfile << "MPV: " << fitResultLandau2->GetParameter(1) << " ± " << fitResultLandau2->GetParError(1) << "\n";
-        outfile << "Sigma: " << fitResultLandau2->GetParameter(2) << " ± " << fitResultLandau2->GetParError(2) << "\n";
-        outfile << "Chi-square: " << fitResultLandau2->GetChisquare() << "\n";
-        outfile << "NDF: " << fitResultLandau2->GetNDF() << "\n";
+    outfile << "Gaussian Fit Results:\n";
+    outfile << "Amplitude: " << fitResult2->GetParameter(0) << " ± " << fitResult2->GetParError(0) << "\n";
+    outfile << "Mean: " << fitResult2->GetParameter(1) << " ± " << fitResult2->GetParError(1) << "\n";
+    outfile << "Sigma: " << fitResult2->GetParameter(2) << " ± " << fitResult2->GetParError(2) << "\n";
+    outfile << "Chi-square: " << fitResult2->GetChisquare() << "\n";
+    outfile << "NDF: " << fitResult2->GetNDF() << "\n\n";
 
-        outfile.close();
+    outfile << "Landau Fit Results:\n";
+    outfile << "Amplitude: " << fitResultLandau2->GetParameter(0) << " ± " << fitResultLandau2->GetParError(0) << "\n";
+    outfile << "MPV: " << fitResultLandau2->GetParameter(1) << " ± " << fitResultLandau2->GetParError(1) << "\n";
+    outfile << "Sigma: " << fitResultLandau2->GetParameter(2) << " ± " << fitResultLandau2->GetParError(2) << "\n";
+    outfile << "Chi-square: " << fitResultLandau2->GetChisquare() << "\n";
+    outfile << "NDF: " << fitResultLandau2->GetNDF() << "\n";
+
+    outfile.close();
 }
