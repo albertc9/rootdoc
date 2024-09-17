@@ -1,4 +1,57 @@
+gSystem -> Load("libMathCore");
+
+// 根据指导网页 https://root.cern/doc/master/langaus_8C.html 中的教程，定义朗道卷积高斯函数
+double langaufun(double *x, double *par) {
+
+   // Fit parameters:
+   // par[0]=Width (scale) parameter of Landau density
+   // par[1]=Most Probable (MP, location) parameter of Landau density
+   // par[2]=Total area (integral -inf to inf, normalization constant)
+   // par[3]=Width (sigma) of convoluted Gaussian function
+
+   // Numeric constants
+   double invsq2pi = 0.3989422804014;   // (2 pi)^(-1/2)
+   double mpshift  = -0.22278298;       // Landau maximum location
+
+   // Control constants
+   double np = 100.0;      // number of convolution steps
+   double sc = 5.0;      // convolution extends to +-sc Gaussian sigmas
+
+   // Variables
+    double xx;
+    double mpc;
+    double fland;
+    double sum = 0.0;
+    double xlow,xupp;
+    double step;
+    double i;
+
+   // MP shift correction
+   mpc = par[1] - mpshift * par[0];
+
+   // Range of convolution integral
+   xlow = x[0] - sc * par[3];
+   xupp = x[0] + sc * par[3];
+   
+   step = (xupp-xlow) / np;
+
+   // Convolution integral of Landau and Gaussian by sum
+   for(i=1.0; i<=np/2; i++) {
+      xx = xlow + (i-.5) * step;
+      fland = TMath::Landau(xx,mpc,par[0]) / par[0];
+      sum += fland * TMath::Gaus(x[0],xx,par[3]);
+ 
+      xx = xupp - (i-.5) * step;
+      fland = TMath::Landau(xx,mpc,par[0]) / par[0];
+      sum += fland * TMath::Gaus(x[0],xx,par[3]);
+   }
+ 
+   return (par[2] * step * sum * invsq2pi / par[3]);
+}
+
+
 void task1_4() {
+    TVirtualFitter::SetDefaultFitter("Minuit");
     TFile *file = TFile::Open("va.root", "READ");
     TFile *outFile = new TFile("fit_results.root","RECREATE");
 
@@ -8,16 +61,13 @@ void task1_4() {
             TString histName = TString::Format("%d_%d", A, B);
             TH1D *hist = (TH1D*)file -> Get(histName);
 
-            TF1Convolution *fconv = new TF1Convolution("landau", "gaus", 35, 150, true); // true 应该是用来归一化的
-            fconv -> SetNofPointsFFT(1000);
-
-            TF1 *landauGausFit = new TF1("landauGausFit", fconv, 35, 150, fconv -> GetNpar());
-            landauGausFit -> SetParameters(1000, 50, 5);
-            landauGausFit -> SetParNames("Constant", "MPV", "Sigma");
+            TF1 *landauGausFit = new TF1("landauGausFit", langaufun, 35, 150, 4);
+            landauGausFit -> SetParameters(1.8, 50, 50000, 3);
+            landauGausFit -> SetParNames("Width", "MP", "Area", "Sigma"); 
 
             hist -> Fit(landauGausFit, "Q");
 
-            double gainCoefficient = landauGausFit -> GetParameter("MPV");
+            double gainCoefficient = landauGausFit -> GetParameter(1);
 
             gainMap -> SetBinContent(A + 1, B + 1, gainCoefficient);
 
