@@ -77,6 +77,7 @@ void task1_4() {
 
             TH1D *histClone = (TH1D*)hist -> Clone();
             histClone -> SetDirectory(0); // 克隆并解除关联
+            histClone -> Sumw2(); // 计算误差，方便后续误差条的显示
             originalHists.push_back((TH1D*)hist -> Clone());
 
             TF1 *landauGausFit = new TF1("landauGausFit", langaufun, 35, 150, 4);
@@ -118,6 +119,7 @@ void task1_4() {
 
             TH1D * correctedHist = (TH1D*)hist -> Clone(TString::Format("corrected_%d_%d", A, B));
             correctedHist -> SetDirectory(0);
+            correctedHist -> Sumw2();
             correctedHist -> Scale(correctionFactor);
             correctedHists.push_back(correctedHist);
 
@@ -128,11 +130,19 @@ void task1_4() {
     TH1D *mergedHist = (TH1D*)correctedHists[0] -> Clone("merged_hist");
     mergedHist -> Reset();
     mergedHist -> SetDirectory(0);
+    mergedHist -> Sumw2(); // 计算误差
 
     for (size_t i = 0; i < correctedHists.size(); ++i){
         mergedHist -> Add(correctedHists[i]);
     }
 
+    TF1 *mergedFit = new TF1("mergedFit", langaufun, 35, 150, 4);
+    mergedFit -> SetParameters(1.8, 50, 50000, 3);
+    mergedFit -> SetParNames("Width", "MP", "Area", "Sigma");
+    mergedFit -> SetNpx(1000);
+    mergedHist -> Fit(mergedFit, "Q");
+
+    mergedFit -> Write();
     mergedHist -> Write();
     gainMap -> Write();
     chi2Map -> Write();
@@ -147,22 +157,46 @@ void task1_4() {
     TH2D *gainHist = (TH2D*)inFile -> Get("gainMap");
     TH2D *chi2Hist = (TH2D*)inFile -> Get("chi2Map");
     TH1D *mergedHistFromFile = (TH1D*)inFile -> Get("merged_hist");
+    TF1 *mergedFitFromFile = (TF1*)inFile -> Get("mergedFit");
 
     TCanvas *c1 = new TCanvas("c1", "Gain Coefficient Heatmap", 800, 600);
     gStyle -> SetOptStat(0);
     gainHist -> Draw("COLZ");
 
-    c1 -> SaveAs("gain_heatmap.png");
+    c1 -> SaveAs("gain_heatmap.pdf");
 
     TCanvas *c2 = new TCanvas("c2", "ChiSquared/NDF Heatmap", 800, 600);
     chi2Hist -> Draw("COLZ");
 
-    c2 -> SaveAs("chi2Ndf_heatmap.png");
+    c2 -> SaveAs("chi2Ndf_heatmap.pdf");
 
     TCanvas *c3 = new TCanvas("c3", "Merged Spectrum", 800, 600);
-    mergedHistFromFile -> Draw();
+    mergedHistFromFile -> Draw("HIST");
     
-    c3 -> SaveAs("merged_spectrum.png");
+    // 这里的 merged_spectrum 实际上是对每个原始直方图进行郎道卷积高斯函数拟合，得到MPV，计算平均MPV后以 correctionFactor = targetMPV / gainCoefficient 作为校正因子对齐得到的合并的直方图
+    c3 -> SaveAs("merged_spectrum.pdf");
+
+    TCanvas *c4 = new TCanvas("c4", "Fitted Merged Spectrum", 800, 600);
+    gStyle -> SetOptFit(1111); 
+    mergedHistFromFile -> Draw("E1");
+    mergedFitFromFile -> SetLineColor(kRed);
+    mergedFitFromFile -> Draw("SAME");
+
+    gPad -> Update();
+    TPaveStats *stats = (TPaveStats*)mergedHistFromFile -> FindObject("stats");
+    if (stats){
+    stats -> SetX1NDC(0.65);
+    stats -> SetY1NDC(0.65);
+    stats -> SetX2NDC(0.90);
+    stats -> SetY2NDC(0.90);
+    stats -> SetBorderSize(1);
+    }
+
+    c4 -> SaveAs("fitted_merged_spectrum.pdf");
 
     inFile -> Close(0);
+    c1 -> Close(0);
+    c2 -> Close(0);
+    c3 -> Close(0);
+    c4 -> Close(0);
 }
