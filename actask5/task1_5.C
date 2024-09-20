@@ -1,12 +1,11 @@
-z// 有一个需要注意的点：在ROOT中，直方图默认与当前目录关联（例如TFile）。当关闭TFile时，与其关联的所有直方图都会被删除，如果之后需要调用的话就会产生无效的内存访问。这可能是我在运行中偶尔出现 crash 的原因。
+// 有一个需要注意的点：在ROOT中，直方图默认与当前目录关联（例如TFile）。当关闭TFile时，与其关联的所有直方图都会被删除，如果之后需要调用的话就会产生无效的内存访问。这可能是我在运行中偶尔出现 crash 的原因。
+// gSystem -> Load("libMathCore"); // 似乎有时会产生崩溃，并且提示可能问题出在 libMathCore 上。因此添加这行代码防止崩溃（虽然可能是我电脑的问题）。
 
-gSystem -> Load("libMathCore"); // 似乎有时会产生崩溃，并且提示可能问题出在 libMathCore 上。因此添加这行代码防止崩溃（虽然可能是我电脑的问题）。
-
-// 这部分是根据指导网页 https://root.cern/doc/master/langaus_8C.html 中的教程，定义朗道卷积高斯函数。**好像有直接调用的方法？**
-#include "langaufun.C"
-
+#include "langaufun.C" // 该函数是根据cern.root指导网页中教程中得到的，其中定义了郎道卷积高斯函数
 
 void task1_5() {
+	auto start = std::chrono::high_resolution_clock::now(); // 记录程序运行时间
+
     TVirtualFitter::SetDefaultFitter("Minuit"); // **在上一次程序运行中发现无法使用 Minuit 改用 Minuit2，这一次发现无法使用 Minuit2 改用 Minuit。由于每个A_B都要提示一次（1152次），于是预先在这里声明。但是为什么？**
     TFile *file = TFile::Open("va.root", "READ");
     TFile *outFile = new TFile("fit_results.root","RECREATE");
@@ -23,6 +22,10 @@ void task1_5() {
     std::vector<TH1D*> correctedHists; // 输出的（校正后的）值方图
     std::vector<TH1D*> originalHists; // 由于出现了程序崩溃，存储一个原始直方图。应该是程序开头的注释中提到的问题
 
+    int lefFit = 0, riFit = 0; // 拟合区间
+    lefFit = 50;
+    riFit = 100;
+
     for (int A=0; A < 192; ++A){
         for (int B=0; B < 6; ++B){
             TString histName = TString::Format("%d_%d", A, B);
@@ -33,7 +36,7 @@ void task1_5() {
             histClone -> Sumw2(); // 计算误差，方便后续误差条的显示（虽然并不明显？）
             originalHists.push_back((TH1D*)hist -> Clone()); // 再次存储一个直方图
 
-            TF1 *landauGausFit = new TF1("landauGausFit", langaufun, 35, 150, 4); // 选择35到150的原因在文章中有说明
+            TF1 *landauGausFit = new TF1("landauGausFit", langaufun, lefFit, riFit, 4); // 选择区间的原因在文章中有说明
             landauGausFit -> SetParameters(1.8, 50, 50000, 3);
             landauGausFit -> SetParNames("Width", "MP", "Area", "Sigma");
 
@@ -41,7 +44,7 @@ void task1_5() {
 
             hist -> Fit(landauGausFit, "Q");
 
-            double gainCoefficient = landauGausFit -> GetMaximumX(35, 150);
+            double gainCoefficient = landauGausFit -> GetMaximumX(lefFit, riFit);
 
             double chi2 = landauGausFit -> GetChisquare();
             int ndf = landauGausFit -> GetNDF();
@@ -90,7 +93,7 @@ void task1_5() {
         mergedHist -> Add(correctedHists[i]);
     }
 
-    TF1 *mergedFit = new TF1("mergedFit", langaufun, 35, 150, 4);
+    TF1 *mergedFit = new TF1("mergedFit", langaufun, lefFit, riFit, 4);
     mergedFit -> SetParameters(1.8, 50, 50000, 3);
     mergedFit -> SetParNames("Width", "MP", "Area", "Sigma");
     mergedFit -> SetNpx(1000);
@@ -154,4 +157,9 @@ void task1_5() {
     c2 -> Close(0);
     c3 -> Close(0);
     c4 -> Close(0);
+
+	auto end = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> elapsed = end - start;
+std::cout << "Total execution time: " << elapsed.count() << " seconds." << std::endl;
 }
