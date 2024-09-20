@@ -1,58 +1,12 @@
-// 有一个需要注意的点：在ROOT中，直方图默认与当前目录关联（例如TFile）。当关闭TFile时，与其关联的所有直方图都会被删除，如果之后需要调用的话就会产生无效的内存访问。这可能是我在运行中偶尔出现 crash 的原因。
+z// 有一个需要注意的点：在ROOT中，直方图默认与当前目录关联（例如TFile）。当关闭TFile时，与其关联的所有直方图都会被删除，如果之后需要调用的话就会产生无效的内存访问。这可能是我在运行中偶尔出现 crash 的原因。
 
 gSystem -> Load("libMathCore"); // 似乎有时会产生崩溃，并且提示可能问题出在 libMathCore 上。因此添加这行代码防止崩溃（虽然可能是我电脑的问题）。
 
 // 这部分是根据指导网页 https://root.cern/doc/master/langaus_8C.html 中的教程，定义朗道卷积高斯函数。**好像有直接调用的方法？**
-double langaufun(double *x, double *par) {
-
-   // Fit parameters:
-   // par[0]=Width (scale) parameter of Landau density
-   // par[1]=Most Probable (MP, location) parameter of Landau density
-   // par[2]=Total area (integral -inf to inf, normalization constant)
-   // par[3]=Width (sigma) of convoluted Gaussian function
-
-   // Numeric constants
-   double invsq2pi = 0.3989422804014;   // (2 pi)^(-1/2)
-   double mpshift  = -0.22278298;       // Landau maximum location 应该是Landau分布峰值位置的修正
-
-   // Control constants
-   double np = 100.0;      // number of convolution steps
-   double sc = 5.0;      // convolution extends to +-sc Gaussian sigmas
-
-   // Variables
-    double xx;
-    double mpc;
-    double fland;
-    double sum = 0.0;
-    double xlow,xupp;
-    double step;
-    double i;
-
-   // MP shift correction
-   mpc = par[1] - mpshift * par[0];
-
-   // Range of convolution integral
-   xlow = x[0] - sc * par[3];
-   xupp = x[0] + sc * par[3];
-
-    step = (xupp-xlow) / np;
-
-   // Convolution integral of Landau and Gaussian by sum
-    for(i=1.0; i<=np/2; i++) {
-      xx = xlow + (i-.5) * step;
-    fland = TMath::Landau(xx,mpc,par[0]) / par[0];
-      sum += fland * TMath::Gaus(x[0],xx,par[3]);
-
-      xx = xupp - (i-.5) * step;
-    fland = TMath::Landau(xx,mpc,par[0]) / par[0];
-      sum += fland * TMath::Gaus(x[0],xx,par[3]);
-    }
-
-   return (par[2] * step * sum * invsq2pi / par[3]);
-}
+#include "langaufun.C"
 
 
-void task1_4() {
+void task1_5() {
     TVirtualFitter::SetDefaultFitter("Minuit"); // **在上一次程序运行中发现无法使用 Minuit 改用 Minuit2，这一次发现无法使用 Minuit2 改用 Minuit。由于每个A_B都要提示一次（1152次），于是预先在这里声明。但是为什么？**
     TFile *file = TFile::Open("va.root", "READ");
     TFile *outFile = new TFile("fit_results.root","RECREATE");
