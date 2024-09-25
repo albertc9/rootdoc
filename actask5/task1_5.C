@@ -30,7 +30,6 @@ void task1_5() {
     lefMergedFit = 45;
     riMergedFit = 75;
 
-
     for (int A=0; A < 192; ++A){
         for (int B=0; B < 6; ++B){
             TString histName = TString::Format("%d_%d", A, B);
@@ -46,7 +45,6 @@ void task1_5() {
             landauGausFit -> SetParNames("Width", "MP", "Area", "Sigma");
 
             landauGausFit -> SetNpx(1000); // 由于初步拟合时发现峰值附近的拟合函数看起来太尖锐，手动增加绘制精度 
-
             hist -> Fit(landauGausFit, "Q");
 
             double gainCoefficient = landauGausFit -> GetMaximumX(lefFit, riFit);
@@ -108,7 +106,44 @@ void task1_5() {
         mergedHist -> Add(correctedHists[i]);
     }
 
-    TF1 *mergedFit = new TF1("mergedFit", langaufun, lefMergedFit, riMergedFit, 4);
+    double bestChi2NDF = 1e6;
+    int bestLefFit = 40, bestRiFit = 75;
+
+    for (double lower = 40; lower <= 48; lower += 0.5) {
+    for (double upper = 60; upper <= 75; upper += 0.5) {
+
+    TF1 *tempFit = new TF1("tempFit", langaufun, lower, upper, 4);
+    tempFit->SetParameters(1.8, 50, 50000, 3);
+    tempFit->SetParNames("Width", "MP", "Area", "Sigma");
+    tempFit->SetNpx(1000);
+
+    mergedHist->Fit(tempFit, "Q");
+
+    double tempChi2 = 0;
+    int tempNDF = 0;
+    for (int bin = mergedHist->FindBin(45); bin <= mergedHist->FindBin(80); bin++) {
+        double observed = mergedHist->GetBinContent(bin);
+        double expected = tempFit->Eval(mergedHist->GetBinCenter(bin));
+        if (expected > 0) {
+            tempChi2 += (observed - expected) * (observed - expected) / expected;
+            tempNDF++;
+        }
+    }
+    tempNDF -= 4;
+    double tempChi2NDF = tempChi2 / tempNDF;
+
+    // 判断是否为最优
+    if (tempChi2NDF < bestChi2NDF) {
+        bestChi2NDF = tempChi2NDF;
+        bestLefFit = lower;
+        bestRiFit = upper;
+    }
+
+    delete tempFit;
+    }
+    }
+
+    TF1 *mergedFit = new TF1("mergedFit", langaufun, bestLefFit, bestRiFit, 4);
     mergedFit -> SetParameters(1.8, 50, 50000, 3);
     mergedFit -> SetParNames("Width", "MP", "Area", "Sigma");
     mergedFit -> SetNpx(1000);
@@ -166,7 +201,7 @@ void task1_5() {
 
     TCanvas *c4 = new TCanvas("c4", "Fitted Merged Spectrum", 800, 600);
     gStyle -> SetOptFit(1111); 
-    mergedHistFromFile -> Draw("E1");
+    mergedHistFromFile -> Draw("E1Y0");
     mergedFitFromFile -> SetLineColor(kRed);
     mergedFitFromFile -> Draw("SAME");
 
@@ -200,7 +235,8 @@ void task1_5() {
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = end - start;
 
-    std::cout << "Total execution time: " << elapsed.count() << " seconds." << std::endl;
+    std::cout << "Optimal fit range: [" << bestLefFit << ", " << bestRiFit << "], with Chi2/NDF:" << mergedChi2NDF << "." << std::endl;
     std::cout << "Attention: All Chi2 / NDF are in the range of [45, 80]." << std::endl;
+    std::cout << "Total execution time: " << elapsed.count() << " seconds." << std::endl;
 
 }
