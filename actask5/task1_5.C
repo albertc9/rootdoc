@@ -31,7 +31,6 @@ void task1_5() {
     riMergedFit = 75;
 
 
-
     for (int A=0; A < 192; ++A){
         for (int B=0; B < 6; ++B){
             TString histName = TString::Format("%d_%d", A, B);
