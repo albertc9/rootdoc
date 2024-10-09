@@ -9,7 +9,8 @@ void task1_5() {
 	auto start = std::chrono::high_resolution_clock::now(); // 记录程序运行时间
 
     TVirtualFitter::SetDefaultFitter("Minuit"); // **在上一次程序运行中发现无法使用 Minuit 改用 Minuit2，这一次发现无法使用 Minuit2 改用 Minuit。由于每个A_B都要提示一次（1152次），于是预先在这里声明。但是为什么？**
-    TFile *file = TFile:: Open("va.root", "READ");
+    
+    TFile *file = TFile::Open("va.root", "READ");
     TFile *outFile = new TFile("fit_results.root","RECREATE");
 
     std::ofstream outputFile("chi2Ndf_and_gainCoefficients.txt");
@@ -30,8 +31,8 @@ void task1_5() {
     lefMergedFit = 45;
     riMergedFit = 75;
 
-    for (int A=0; A < 192; ++A){
-        for (int B=0; B < 6; ++B){
+    for (int A = 0; A < 192; ++A){
+        for (int B = 0; B < 6; ++B){
             TString histName = TString::Format("%d_%d", A, B);
             TH1D *hist = (TH1D*)file -> Get(histName);
 
@@ -76,6 +77,8 @@ void task1_5() {
 
         }
     }
+
+// ----------------
 
     double targetMPV = totalMPV / numDetectors; // 计算平均值用来对齐
 
@@ -204,9 +207,7 @@ void task1_5() {
     mergedHistFromFile -> Draw("E1Y0");
     mergedFitFromFile -> SetLineColor(kRed);
     mergedFitFromFile -> Draw("SAME");
-
-    gPad -> Update();
-    TPaveStats *stats = (TPaveStats*)mergedHistFromFile -> FindObject("stats");
+VARIABLES  (TPaveStats*)mergedHistFromFile -> FindObject("stats");
     if (stats){
     stats -> SetX1NDC(0.65);
     stats -> SetY1NDC(0.65);
