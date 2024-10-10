@@ -24,6 +24,7 @@ void atask1_6() {
     std::vector<TH1D*> correctedHists; // 输出的（校正后的）值方图
     std::vector<TH1D*> originalHists; // 由于出现了程序崩溃，存储一个原始直方图。应该是程序开头的注释中提到的问题
 
+
     int lefFit = 0, riFit = 0, lefMergedFit = 0, riMergedFit = 0; // 拟合区间
     lefFit = 45;
     riFit = 75;
@@ -74,28 +75,34 @@ void atask1_6() {
             numDetectors ++;
 
             hist -> Write();
-
         }
     }
 
     double targetMPV = totalMPV / numDetectors; // 计算平均值用来对齐
 
-    for (int A = 0; A < 192; ++A){
-        for (int B = 0; B < 6; ++B){
+for (int A = 0; A < 192; ++A){
+    for (int B = 0; B < 6; ++B){
 
-            TH1D *hist = originalHists[A * 6 + B];
-            double gainCoefficient = mpvList[A * 6 + B];
-            double correctionFactor = targetMPV / gainCoefficient; // 定义一个修正（对齐）因子
+        TH1D *hist = originalHists[A * 6 + B];
+        double gainCoefficient = mpvList[A * 6 + B];
+        double correctionFactor = gainCoefficient / targetMPV; // 对 x 轴进行缩放的因子
 
-            TH1D * correctedHist = (TH1D*)hist -> Clone(TString::Format("corrected_%d_%d", A, B));
-            correctedHist -> SetDirectory(0); // 也是解除关联
-            correctedHist -> Sumw2();
-            correctedHist -> Scale(correctionFactor);
-            correctedHists.push_back(correctedHist);
+        // 创建一个校正后的直方图（只修改 x 轴范围）
+        TH1D *correctedHist = (TH1D*)hist->Clone(TString::Format("corrected_%d_%d", A, B));
+        correctedHist->SetDirectory(0); // 解除关联
+        correctedHist->Sumw2();
 
-            correctedHist -> Write();
-        }
+        // 重新定义 x 轴范围，只在 x 方向上进行缩放
+        int nbins = hist->GetNbinsX();
+        double xlow = hist->GetXaxis()->GetXmin() * correctionFactor;
+        double xup = hist->GetXaxis()->GetXmax() * correctionFactor;
+        correctedHist->GetXaxis()->Set(nbins, xlow, xup);
+
+        correctedHists.push_back(correctedHist);
+        correctedHist->Write();
     }
+}
+
 
     // 这是未对齐的直方图
     TH1D *mergedHistUncorrected = nullptr; // 初始化为空
@@ -118,12 +125,23 @@ void atask1_6() {
     TH1D *mergedHist = (TH1D*)correctedHists[0] -> Clone("merged_hist");
     mergedHist -> Reset();
     mergedHist -> SetDirectory(0); // 也是解除关联
-    mergedHist -> Sumw2(); // 计算误差
-
+    mergedHist -> Sumw2(); // 计算误差*
     for (size_t i = 0; i < correctedHists.size(); ++i){
         mergedHist -> Add(correctedHists[i]);
         mergedHistUncorrected -> Add(originalHists[i]);
     }
+
+
+    if (mergedHistUncorrected->Integral() > 0) {
+    mergedHistUncorrected->Scale(1.0 / mergedHistUncorrected->Integral());
+}
+
+
+    if (mergedHist->Integral() > 0) {
+    mergedHist->Scale(1.0 / mergedHist->Integral());
+}
+
+
 
     double bestChi2NDF = 1e6;
     int bestLefFit = 40, bestRiFit = 75;

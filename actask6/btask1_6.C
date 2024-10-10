@@ -28,8 +28,8 @@ void btask1_6(){
     eff -> SetTitle("Efficiency vs Bin; Bin; Efficiency");
 
     for (int i = 0; i < num; ++i){
-        double all_count = all -> GetBinContent(i + 1);
-        double sel_count = sel -> GetBinContent(i + 1);
+        double all_count = all_hist -> GetBinContent(i + 1);
+        double sel_count = sel_hist -> GetBinContent(i + 1);
         double efficiency = 0;
 
     if (all_count > 0){
