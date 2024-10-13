@@ -47,7 +47,7 @@ void atask1_7(){
 
             double chi2 = 0;
             int ndf = 0;
-            for (int bin = hist -> FindBin(45);bin <= hist -> FindBin(90); bin++){
+            for (int bin = hist -> FindBin(45); bin <= hist -> FindBin(90); bin++){
                 double observed = hist -> GetBinContent(bin);
                 double expected = landauGausFit -> Eval(hist -> GetBinCenter(bin));
                 if (expected > 0){
@@ -83,11 +83,13 @@ void atask1_7(){
             TH1D *correctedHist = (TH1D*)hist -> Clone(TString::Format("corrected_%d_%d", A, B));
             correctedHist -> SetDirectory(0);
 
+/*
             int nbins = hist -> GetNbinsX();
             double xlow = hist -> GetXaxis() -> GetXmin() * correctionFactor;
             double xup = hist -> GetXaxis() -> GetXmax() * correctionFactor;
             correctedHist -> GetXaxis() -> Set(nbins, xlow, xup);
 
+*/
             // correctedHist -> Sumw2();
 
             correctedHists.push_back(correctedHist);
@@ -135,7 +137,7 @@ void atask1_7(){
             mergedHistUncorrected -> Add(histFromFile);
         }
     }
-        mergedHistUncorrected->Scale(1.0 / 1152);
+        // mergedHistUncorrected->Scale(1.0 / 1152);
 
 // ！！！这里应该也没有问题。我原来以为是对齐前的相加出了问题，后来发现是对齐后的相加除了问题，因为fitted_merged_spectrum也随着出现了问题（应该是只显示第一个图像）。以下部分的问题应该是最大的。
 
@@ -218,7 +220,7 @@ for (size_t i = 0; i < correctedHists.size(); ++i) {
     double rmsUncorrected = mergedHistUncorrectedFromFile -> GetRMS();
     TPaveText *statsUncorrected = new TPaveText(0.6, 0.75, 0.88, 0.85, "NDC");
     statsUncorrected -> SetFillColor(0);
-    statsUncorrected -> AddText("Uncorrected Histogram Stats:");
+    statsUncorrected -> AddText("(B)Uncorrected Histogram Stats:");
     statsUncorrected -> AddText(TString::Format("Mean = %.2f", meanUncorrected));
     statsUncorrected -> AddText(TString::Format("RMS = %.2f", rmsUncorrected));
     statsUncorrected -> Draw("SAMS");
@@ -228,7 +230,7 @@ for (size_t i = 0; i < correctedHists.size(); ++i) {
     double rmsCorrected = mergedHistFromFile -> GetRMS();
     TPaveText *statsCorrected = new TPaveText(0.6, 0.6, 0.88, 0.7, "NDC");
     statsCorrected -> SetFillColor(0);
-    statsCorrected -> AddText("Corrected Histogram Stats:");
+    statsCorrected -> AddText("(R)Corrected Histogram Stats:");
     statsCorrected -> AddText(TString::Format("Mean = %.2f", meanCorrected));
     statsCorrected -> AddText(TString::Format("RMS = %.2f", rmsUncorrected));
     statsCorrected -> Draw("SAME");
