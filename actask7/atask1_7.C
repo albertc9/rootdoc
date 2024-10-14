@@ -92,10 +92,24 @@ void atask1_7(){
 */
             // correctedHist -> Sumw2();
 
+            int nbins = hist -> GetNbinsX();
+            double xlow = hist -> GetXaxis() -> GetXmin();
+            double xup = hist -> GetXaxis() -> GetXmax();
+            correctedHist -> GetXaxis() -> Set(nbins, xlow, xup);
+
+            for (int bin = 1; bin <= nbins; ++bin) {
+                double content = hist -> GetBinContent(bin);
+                double center = hist -> GetBinCenter(bin);
+                correctedHist -> SetBinContent(bin, content);
+                correctedHist -> GetXaxis() -> SetBinLabel(bin, TString::Format("%.2f", center * correctionFactor));
+            }
+
             correctedHists.push_back(correctedHist);
             correctedHist -> Write();
         }
     }
+
+
 
 // ！！！ 这块对齐应该也没有问题。root文件中的直方图表明已经完成了缩放（对齐），等待相加
 
@@ -163,11 +177,11 @@ TH1D *mergedHist = nullptr;
 
 
 
-for (size_t i = 0; i < correctedHists.size(); ++i) {
-        mergedHist->Add(correctedHists[i]);
+    for (size_t i = 0; i < correctedHists.size(); ++i) {
+            mergedHist->Add(correctedHists[i]);
+    }
 
-}
-
+    mergedHist -> GetXaxis()->SetRangeUser(0, 400);
 
 
     TF1 *mergedFit = new TF1("mergedFit", langaufun, lefMergedFit, riMergedFit, 4);

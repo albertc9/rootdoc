@@ -7,7 +7,7 @@ double langaufun(double *x, double *par) {
    // par[2]=Total area (integral -inf to inf, normalization constant)
    // par[3]=Width (sigma) of convoluted Gaussian function
 
-   // Numeric constants
+   // Numeric constant
    double invsq2pi = 0.3989422804014;   // (2 pi)^(-1/2)
    double mpshift  = -0.22278298;       // Landau maximum location 应该是Landau分布峰值位置的修正
 
