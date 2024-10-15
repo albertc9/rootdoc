@@ -1,6 +1,3 @@
-#include <iostream>
-#include <TRandom3.h>
-#include <TMath.h>
 
 void pile_up2() {
     // 初始化参数
