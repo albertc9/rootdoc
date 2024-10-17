@@ -1,0 +1,10 @@
+{
+    "name": "My Codespace",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "settings": {},
+    "extensions": [],
+    "postCreateCommand": "ssh -l zhanglikai lxlogin.ihep.ac.cn",
+    "remoteUser": "vscode"
+}
